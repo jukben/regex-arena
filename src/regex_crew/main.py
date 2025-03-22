@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import sys
 import warnings
+import os
 from crewai import Crew
 
 
@@ -28,6 +29,11 @@ def run():
     """
     Run the crew.
     """
+    # Remove the output log file if it exists
+    log_file = 'regex_crew.json'
+    if os.path.exists(log_file):
+        os.remove(log_file)
+        
     inputs = {"regex_problem": "Match valid email addresses and reject invalid ones."}
     
     print("Starting crew...")
@@ -51,7 +57,7 @@ def run():
                 f"Task {task_output} output: {task_output}"
             ),
             verbose=True,
-            output_log_file='regex_crew.json'
+            output_log_file=log_file
         )
         result = code_execution_crew.kickoff(inputs)
         print(result)
