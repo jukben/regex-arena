@@ -1,44 +1,36 @@
 import re
 import json
 
-def test_regex(regex_pattern, test_cases):
+
+def test_regex(regex: str, test_cases: dict) -> dict:
+    """
+    Test a regex pattern against provided test cases.
+
+    Args:
+        regex: Regular expression pattern to test
+        test_cases: Dictionary with 'valid' and 'invalid' test cases
+
+    Returns:
+        Dictionary with test results
+    """
+    pattern = re.compile(regex)
     results = {
-        "score": 0,
-        "failures": []
+        "valid_matches": [],
+        "valid_non_matches": [],
+        "invalid_matches": [],
+        "invalid_non_matches": [],
     }
-    
-    total_cases = len(test_cases["valid"]) + len(test_cases["invalid"])
-    passed_cases = 0
-    
-    # Compile regex (with error handling)
-    try:
-        pattern = re.compile(regex_pattern)
-    except Exception as e:
-        results["failures"].append(f"Error compiling regex: {str(e)}")
-        results["score"] = 0
-        return results
-    
-    # Test valid cases
-    for valid in test_cases["valid"]:
-        try:
-            if pattern.fullmatch(valid):
-                passed_cases += 1
-            else:
-                results["failures"].append(valid)
-        except Exception as e:
-            results["failures"].append(valid)
-    
-    for invalid in test_cases["invalid"]:
-        try:
-            if not pattern.fullmatch(invalid):
-                passed_cases += 1
-            else:
-                results["failures"].append(invalid)
-        except Exception as e:
-            results["failures"].append(invalid)
-    
-    # Calculate score as percentage of passed cases
-    if total_cases > 0:
-        results["score"] = int((passed_cases / total_cases) * 100)
-    
+
+    for test in test_cases.get("valid", []):
+        if pattern.match(test):
+            results["valid_matches"].append(test)
+        else:
+            results["valid_non_matches"].append(test)
+
+    for test in test_cases.get("invalid", []):
+        if pattern.match(test):
+            results["invalid_matches"].append(test)
+        else:
+            results["invalid_non_matches"].append(test)
+
     return results
