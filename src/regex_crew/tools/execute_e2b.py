@@ -42,27 +42,21 @@ def execute_e2b(regex: str, test_cases: TestSuite) -> str:
 
 def generate_test_sandbox_for_regex(regex: str, test_cases: TestSuite) -> str:
     """Generate Python code to test a regex pattern against test cases."""
-    valid_cases_str = test_cases["valid"]
-    invalid_cases_str = test_cases["invalid"]
 
     # Read the template file
     with open("src/regex_crew/tools/regex_evaluate_template.py", "r") as f:
         template = f.read()
 
     # Add the test execution code at the end
-    test_code = f"""
-# Setup test cases
+    return f"""
+{template}
+
 test_cases = {{
-    "valid": {valid_cases_str},
-    "invalid": {invalid_cases_str}
+    "valid": {test_cases.valid},
+    "invalid": {test_cases.invalid}
 }}
 
-# Run test and print results
-try:
-    results = test_regex("{regex}", test_cases)
-    print(json.dumps(results, indent=2))
-except Exception as e:
-    print(json.dumps({{"error": str(e), "passed": False, "score": 0}}, indent=2))
+regex = "{regex}"
+res = test_regex(regex, test_cases)
+print(json.dumps(res, indent=2))
 """
-
-    return template + test_code
