@@ -4,6 +4,8 @@
 
 ![CleanShot 2025-03-22 at 18 39 03@2x](https://github.com/user-attachments/assets/b5d41dbd-859f-4c5c-ba14-f9318fba2828)
 
+Research: [LLM-Powered Regex Tools.pdf](https://github.com/user-attachments/files/19404650/LLM-Powered.Regex.Tools.pdf)
+
 Welcome to the RegexCrew Crew project, powered by [crewAI](https://crewai.com). This template is designed to help you set up a multi-agent AI system with ease, leveraging the powerful and flexible framework provided by crewAI. Our goal is to enable your agents to collaborate effectively on complex tasks, maximizing their collective intelligence and capabilities.
 
 ## Installation
