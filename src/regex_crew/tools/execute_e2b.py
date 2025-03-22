@@ -1,6 +1,6 @@
 from crewai.tools import tool
 from e2b_code_interpreter import Sandbox
-from typing import List, Dict, Any, Optional
+from typing import List
 from pydantic import BaseModel, Field
 
 
@@ -27,10 +27,16 @@ def execute_e2b(regex: str, test_cases: TestSuite) -> str:
     Returns:
         String with evaluation results
     """
+    
+    print("Regex input", regex, "test_cases", test_cases)
     try:
         with Sandbox() as sandbox:
+            print("Sandbox", sandbox)
             code = generate_test_sandbox_for_regex(regex, test_cases)
+            print("Code", code)
+
             execution = sandbox.run_code(code)
+            print("Execution", execution)
             return execution.text if execution.text else "No output from sandbox"
     except Exception as e:
         return f"Error executing code in sandbox: {str(e)}"
@@ -38,9 +44,9 @@ def execute_e2b(regex: str, test_cases: TestSuite) -> str:
 
 def generate_test_sandbox_for_regex(regex: str, test_cases: TestSuite) -> str:
     """Generate Python code to test a regex pattern against test cases."""
-    valid_cases_str = str(test_cases.valid).replace("'", '"')
-    invalid_cases_str = str(test_cases.invalid).replace("'", '"')
-
+    valid_cases_str = test_cases['valid']
+    invalid_cases_str = test_cases['invalid']
+    
     return f"""
 import re
 import json
@@ -99,17 +105,6 @@ def test_regex(regex_pattern, test_cases):
     # Calculate score as percentage of passed cases
     if total_cases > 0:
         results["score"] = int((passed_cases / total_cases) * 100)
-    
-    # Add feedback summary
-    if results["passed"]:
-        results["feedback"] = "Perfect! The regex successfully matches all valid cases and rejects all invalid cases."
-    else:
-        feedback = []
-        if results["false_negatives"]:
-            feedback.append(f"The regex fails to match {{len(results['false_negatives'])}} valid inputs.")
-        if results["false_positives"]:
-            feedback.append(f"The regex incorrectly matches {{len(results['false_positives'])}} invalid inputs.")
-        results["feedback"] = " ".join(feedback)
     
     return results
 
