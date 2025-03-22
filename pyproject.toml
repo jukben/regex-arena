@@ -13,8 +13,8 @@ dependencies = [
 
 [project.scripts]
 run = "regex_crew.main:run"
-start-crew = "regex_crew.main:run"
-start-server = "web_api.main:run_server"
+run_crew = "regex_crew.main:run"
+run_server = "web_api.main:run_server"
 
 [build-system]
 requires = ["hatchling"]

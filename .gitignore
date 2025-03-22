@@ -1,4 +1,4 @@
 .env
 __pycache__/
 .DS_Store
-regex_crew.json
+regex_crew_*.json

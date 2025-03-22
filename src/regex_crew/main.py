@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 import warnings
+import glob
+import os
 
 from regex_crew.regex_task import get_implement_regex_task
 from crewai import LLM, Agent, Crew
@@ -7,6 +9,15 @@ import asyncio
 
 
 warnings.filterwarnings("ignore", category=SyntaxWarning, module="pysbd")
+
+
+def cleanup_log_files():
+    """Remove all existing regex crew log files."""
+    for log_file in glob.glob("regex_crew_*.json"):
+        try:
+            os.remove(log_file)
+        except OSError as e:
+            print(f"Error removing log file {log_file}: {e}")
 
 
 gemini_flash = LLM(
@@ -66,9 +77,8 @@ def run():
     """
     Run the crew.
     """
-    # log_file = "regex_crew.json"
-    # if os.path.exists(log_file):
-    #     os.remove(log_file)
+    # Clean up existing log files
+    cleanup_log_files()
 
     regex_problem = "Match valid email addresses and reject invalid ones."
     print("Starting crew...")
@@ -88,17 +98,23 @@ async def run_all_agents(regex_problem):
     return await asyncio.gather(*tasks)
 
 
+def format_step_output(step_output):
+    """Format step output for logging based on its type."""
+    if hasattr(step_output, "thought") and hasattr(step_output, "output"):
+        # This is an AgentFinish
+        return f"🤖 Agent's Answer: {step_output.output}\n"
+    else:
+        # Fallback for unknown types
+        return f"Unknown output type: {str(step_output)}"
+
+
 async def async_crew_execution(agent, name, regex_problem):
     regex_crew = Crew(
         agents=[agent],
         tasks=[get_implement_regex_task(agent)],
-        step_callback=lambda step_output: print(
-            f"Step {step_output} output: {step_output}"
-        ),
-        task_callback=lambda task_output: print(
-            f"Task {task_output} output: {task_output}"
-        ),
-        output_log_file=f"{name}_regex_crew.json",
+        step_callback=lambda step_output: print(format_step_output(step_output)),
+        task_callback=lambda task_output: print(f"\n📋 Task Complete: {task_output}\n"),
+        output_log_file=f"regex_crew_{name}.json",
     )
     result = await regex_crew.kickoff_async(inputs={"regex_problem": regex_problem})
     return result
