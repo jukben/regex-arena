@@ -31,13 +31,10 @@ def execute_e2b(regex: str, test_cases: TestSuite) -> str:
     print("Regex input", regex, "test_cases", test_cases)
     try:
         with Sandbox() as sandbox:
-            print("Sandbox", sandbox)
             code = generate_test_sandbox_for_regex(regex, test_cases)
-            print("Code", code)
-
             execution = sandbox.run_code(code)
-            print("Execution", execution)
-            return execution.text if execution.text else "No output from sandbox"
+            print("Execution", execution.logs)
+            return execution.logs
     except Exception as e:
         return f"Error executing code in sandbox: {str(e)}"
 
