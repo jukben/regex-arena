@@ -1,19 +1,17 @@
 [project]
 name = "regex_crew"
 version = "0.1.0"
-description = "regex-crew using crewAI"
+description = "regex_crew using crewAI"
 authors = [{ name = "Your Name", email = "you@example.com" }]
 requires-python = ">=3.10,<3.13"
 dependencies = [
-    "crewai[tools]>=0.105.0,<1.0.0"
+    "crewai[tools]>=0.105.0,<1.0.0",
+    "e2b-code-interpreter>=1.1.1",
 ]
 
 [project.scripts]
-regex_crew = "regex_crew.main:run"
+run = "regex_crew.main:run"
 run_crew = "regex_crew.main:run"
-train = "regex_crew.main:train"
-replay = "regex_crew.main:replay"
-test = "regex_crew.main:test"
 
 [build-system]
 requires = ["hatchling"]
@@ -22,7 +20,5 @@ build-backend = "hatchling.build"
 [tool.crewai]
 type = "crew"
 
-[dependency-groups]
-dev = [
-    "ruff>=0.11.2",
-]
+[tool.hatch.build.targets.wheel]
+packages = ["src/regex_crew"]
