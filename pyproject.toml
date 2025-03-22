@@ -1,18 +1,20 @@
 [project]
-name = "regex_crew"
+name = "regex-arena"
 version = "0.1.0"
-description = "regex_crew using crewAI"
-authors = [{ name = "Your Name", email = "you@example.com" }]
-requires-python = ">=3.10,<3.13"
+description = "RegEx Arena - AI-powered regex generation"
 dependencies = [
     "crewai[tools]>=0.105.0,<1.0.0",
     "e2b-code-interpreter>=1.1.1",
-    "ruff>=0.11.2",
+    "fastapi>=0.109.2",
+    "uvicorn>=0.27.1",
+    "pydantic>=2.6.1",
+    "ruff>=0.11.2"
 ]
 
 [project.scripts]
 run = "regex_crew.main:run"
-run_crew = "regex_crew.main:run"
+start-crew = "regex_crew.main:run"
+start-server = "web_api.main:run_server"
 
 [build-system]
 requires = ["hatchling"]
