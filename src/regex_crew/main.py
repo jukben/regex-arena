@@ -136,13 +136,13 @@ def run():
                 generate_test_cases,
             ],
             step_callback=lambda step_output: print(
-                f"Step {step_output} output: {step_output}"
+                format_step_output(step_output, "Initial")
             ),
             task_callback=lambda task_output: print(
-                f"Task {task_output} output: {task_output}"
+                f"\n📋 Task (Initial) Complete: {task_output}\n"
             ),
             verbose=True,
-            output_log_file="generate_test_cases_crew.json",
+            output_log_file="regex_crew_initial.json",
         )
         crew_output = generate_test_cases_crew.kickoff(
             inputs={"regex_problem": regex_problem}
@@ -156,20 +156,20 @@ def run():
         ]
 
         # Challange test cases
-        for agent_output in agent_outputs:
+        for i, agent_output in enumerate(agent_outputs):
             evaluate_and_challenge_crew = Crew(
                 agents=[challenger],
                 tasks=[
                     evaluate_and_challenge,
                 ],
                 step_callback=lambda step_output: print(
-                    f"Step {step_output} output: {step_output}"
+                    format_step_output(step_output, i)
                 ),
                 task_callback=lambda task_output: print(
-                    f"Task {task_output} output: {task_output}"
+                    f"\n📋 Task ({i}) Complete: {task_output}\n"
                 ),
                 verbose=True,
-                output_log_file="evaluate_and_challenge_crew.json",
+                output_log_file=f"regex_crew_challenge_{i}.json",
             )
 
             new_test_cases = evaluate_and_challenge_crew.kickoff(
@@ -197,11 +197,11 @@ async def run_all_agents(regex_problem):
     return await asyncio.gather(*tasks)
 
 
-def format_step_output(step_output):
+def format_step_output(step_output, name):
     """Format step output for logging based on its type."""
     if hasattr(step_output, "thought") and hasattr(step_output, "output"):
         # This is an AgentFinish
-        return f"🤖 Agent's Answer: {step_output.output}\n"
+        return f"🤖 Agent's ({name}) Answer: {step_output.output}\n"
     else:
         # Fallback for unknown types
         return f"Unknown output type: {str(step_output)}"
@@ -211,8 +211,10 @@ async def async_crew_execution(agent, name, regex_problem):
     regex_crew = Crew(
         agents=[agent],
         tasks=[get_implement_regex_task(agent)],
-        step_callback=lambda step_output: print(format_step_output(step_output)),
-        task_callback=lambda task_output: print(f"\n📋 Task Complete: {task_output}\n"),
+        step_callback=lambda step_output: print(format_step_output(step_output, name)),
+        task_callback=lambda task_output: print(
+            f"\n📋 Task ({name}) Complete: {task_output}\n"
+        ),
         output_log_file=f"regex_crew_{name}.json",
     )
     result = await regex_crew.kickoff_async(inputs={"regex_problem": regex_problem})
