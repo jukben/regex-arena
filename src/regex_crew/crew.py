@@ -3,7 +3,7 @@ from typing import List
 from crewai import LLM, Agent, Task
 from pydantic import BaseModel, Field
 
-from regex_crew.tools.execute_e2b import TestCasesOutput, execute_e2b
+from regex_crew.tools.execute_e2b import TestCasesOutput, evaluate_regex
 
 gemini_flash = LLM(
     model="gemini/gemini-2.0-flash",
@@ -109,7 +109,7 @@ evaluate_and_challenge_round1 = Task(
     ),
     expected_output="More challenging test suite",
     agent=challenger,
-    tools=[execute_e2b],  # type: ignore
+    tools=[evaluate_regex],  # type: ignore
     output_pydantic=TestCasesOutput,
     context=[implement_regex_round1],
 )
@@ -147,7 +147,7 @@ evaluate_and_challenge_round2 = Task(
     expected_output="Ultimate test cases",
     agent=challenger,
     context=[implement_regex_round2],
-    tools=[execute_e2b],  # type: ignore
+    tools=[evaluate_regex],  # type: ignore
     output_pydantic=TestCasesOutput,
 )
 
@@ -187,7 +187,7 @@ final_evaluation = Task(
     ),
     expected_output="Final evaluation report",
     agent=challenger,
-    tools=[execute_e2b],  # type: ignore
+    tools=[evaluate_regex],  # type: ignore
     context=[implement_regex_final],
     output_pydantic=FinalEvaluationOutput,
 )

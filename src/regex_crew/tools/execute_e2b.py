@@ -2,7 +2,6 @@ from crewai.tools import tool
 from e2b_code_interpreter import Sandbox
 from typing import List
 from pydantic import BaseModel, Field
-import json
 
 
 class TestSuite(BaseModel):
@@ -16,8 +15,8 @@ class TestCasesOutput(BaseModel):
     )
 
 
-@tool("Execute regex testing in sandbox")
-def execute_e2b(regex: str, test_cases: TestSuite) -> str:
+@tool("Evaluate regex")
+def evaluate_regex(regex: str, test_cases: TestSuite) -> str:
     """
     Execute Python code in a sandbox to test regex against test cases.
 
