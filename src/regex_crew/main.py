@@ -29,6 +29,8 @@ def run():
     Run the crew.
     """
     inputs = {"regex_problem": "Match valid email addresses and reject invalid ones."}
+    
+    print("Starting crew...")
 
     try:
         code_execution_crew = Crew(
@@ -43,10 +45,10 @@ def run():
                 final_evaluation,
             ],
             step_callback=lambda step_output: print(
-                f"Step {step_output} output: {step_output.output}"
+                f"Step {step_output} output: {step_output}"
             ),
             task_callback=lambda task_output: print(
-                f"Task {task_output} output: {task_output.output}"
+                f"Task {task_output} output: {task_output}"
             ),
             verbose=True,
             output_log_file='regex_crew.json'
