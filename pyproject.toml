@@ -7,6 +7,7 @@ requires-python = ">=3.10,<3.13"
 dependencies = [
     "crewai[tools]>=0.105.0,<1.0.0",
     "e2b-code-interpreter>=1.1.1",
+    "ruff>=0.11.2",
 ]
 
 [project.scripts]
