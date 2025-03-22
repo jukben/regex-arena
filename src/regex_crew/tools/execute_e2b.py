@@ -1,75 +1,128 @@
-
 from crewai.tools import tool
 from e2b_code_interpreter import Sandbox
-from typing import List 
+from typing import List, Dict, Any, Optional
 from pydantic import BaseModel, Field
 
 
-
 class TestSuite(BaseModel):
-    valid: List[str] = Field(..., description="A list of valid email address strings")
-    invalid: List[str] = Field(..., description="A list of invalid email address strings")
+    valid: List[str] = Field(..., description="A list of valid strings")
+    invalid: List[str] = Field(..., description="A list of invalid strings")
+
 
 class TestCasesOutput(BaseModel):
-    test_cases: TestSuite = Field(..., description="Dictionary with 'valid' and 'invalid' test cases")
+    test_cases: TestSuite = Field(
+        ..., description="Dictionary with 'valid' and 'invalid' test cases"
+    )
 
-@tool("E2B Sandbox")  
-def execute_e2b(regex: str, test_cases: TestSuite) -> str | None:
+
+@tool("Execute regex testing in sandbox")
+def execute_e2b(regex: str, test_cases: TestSuite) -> str:
     """
-    Execute Python code and return the results.
+    Execute Python code in a sandbox to test regex against test cases.
+
+    Args:
+        regex: The regex pattern to test
+        test_cases: A TestSuite object with valid and invalid test cases
+
+    Returns:
+        String with evaluation results
     """
-    with Sandbox() as sandbox:
-        execution = sandbox.run_code(generate_test_sandbox_for_regex(regex, test_cases))
-        return execution.text
-    
-def generate_test_sandbox_for_regex(regex: str, test_cases: TestSuite) -> str:
-    return f"""
-    import re
-    import json
-
-    def test_regex(regex, test_cases):
-        results = {{"passed": True, "failures": [], "score": 0, "false_positives": [], "false_negatives": []}}
-        
-        total_cases = len(test_cases['valid']) + len(test_cases['invalid'])
-        passed_cases = 0
-        
-        # Test valid cases
-        for valid in test_cases['valid']:
-            try:
-                if re.fullmatch(regex, valid):
-                    passed_cases += 1
-                else:
-                    results["passed"] = False
-                    results["failures"].append(f"Failed to match valid input: {{valid}}")
-                    results["false_negatives"].append(valid)
-            except Exception as e:
-                results["passed"] = False
-                results["failures"].append(f"Error with regex on valid input {{valid}}: {{str(e)}}")
-                results["false_negatives"].append(valid)
-        
-        # Test invalid cases
-        for invalid in test_cases['invalid']:
-            try:
-                if not re.fullmatch(regex, invalid):
-                    passed_cases += 1
-                else:
-                    results["passed"] = False
-                    results["failures"].append(f"Incorrectly matched invalid input: {{invalid}}")
-                    results["false_positives"].append(invalid)
-            except Exception as e:
-                results["passed"] = False
-                results["failures"].append(f"Error with regex on invalid input {{invalid}}: {{str(e)}}")
-                results["false_positives"].append(invalid)
-        
-        # Calculate score as percentage of passed cases
-        if total_cases > 0:
-            results["score"] = int((passed_cases / total_cases) * 100)
-        
-        return results
-
     try:
-        results = test_regex('{regex}', {test_cases})
-        return json.dumps(results, indent=2)
+        with Sandbox() as sandbox:
+            code = generate_test_sandbox_for_regex(regex, test_cases)
+            execution = sandbox.run_code(code)
+            return execution.text if execution.text else "No output from sandbox"
     except Exception as e:
-        return json.dumps({{"passed": False, "error": str(e), "score": 0}}, indent=2)
-    """
+        return f"Error executing code in sandbox: {str(e)}"
+
+
+def generate_test_sandbox_for_regex(regex: str, test_cases: TestSuite) -> str:
+    """Generate Python code to test a regex pattern against test cases."""
+    valid_cases_str = str(test_cases.valid).replace("'", '"')
+    invalid_cases_str = str(test_cases.invalid).replace("'", '"')
+
+    return f"""
+import re
+import json
+
+def test_regex(regex_pattern, test_cases):
+    results = {{
+        "passed": True,
+        "score": 0,
+        "false_negatives": [],
+        "false_positives": [],
+        "failures": []
+    }}
+    
+    total_cases = len(test_cases["valid"]) + len(test_cases["invalid"])
+    passed_cases = 0
+    
+    # Compile regex (with error handling)
+    try:
+        pattern = re.compile(regex_pattern)
+    except Exception as e:
+        results["passed"] = False
+        results["failures"].append(f"Error compiling regex: {{str(e)}}")
+        results["score"] = 0
+        return results
+    
+    # Test valid cases
+    for valid in test_cases["valid"]:
+        try:
+            if pattern.fullmatch(valid):
+                passed_cases += 1
+            else:
+                results["passed"] = False
+                results["failures"].append(f"Failed to match valid input: {{valid}}")
+                results["false_negatives"].append(valid)
+        except Exception as e:
+            results["passed"] = False
+            results["failures"].append(f"Error with regex on valid input {{valid}}: {{str(e)}}")
+            results["false_negatives"].append(valid)
+    
+    # Test invalid cases
+    for invalid in test_cases["invalid"]:
+        try:
+            if not pattern.fullmatch(invalid):
+                passed_cases += 1
+            else:
+                results["passed"] = False
+                results["failures"].append(f"Incorrectly matched invalid input: {{invalid}}")
+                results["false_positives"].append(invalid)
+        except Exception as e:
+            results["passed"] = False
+            results["failures"].append(f"Error with regex on invalid input {{invalid}}: {{str(e)}}")
+            # This is technically not a false positive but we categorize it as such
+            # since the regex should handle all inputs without errors
+            results["false_positives"].append(invalid)
+    
+    # Calculate score as percentage of passed cases
+    if total_cases > 0:
+        results["score"] = int((passed_cases / total_cases) * 100)
+    
+    # Add feedback summary
+    if results["passed"]:
+        results["feedback"] = "Perfect! The regex successfully matches all valid cases and rejects all invalid cases."
+    else:
+        feedback = []
+        if results["false_negatives"]:
+            feedback.append(f"The regex fails to match {{len(results['false_negatives'])}} valid inputs.")
+        if results["false_positives"]:
+            feedback.append(f"The regex incorrectly matches {{len(results['false_positives'])}} invalid inputs.")
+        results["feedback"] = " ".join(feedback)
+    
+    return results
+
+# Setup test cases
+test_cases = {{
+    "valid": {valid_cases_str},
+    "invalid": {invalid_cases_str}
+}}
+
+# Run test and print results
+try:
+    results = test_regex("{regex}", test_cases)
+    print(json.dumps(results, indent=2))
+except Exception as e:
+    print(json.dumps({{"error": str(e), "passed": False, "score": 0}}, indent=2))
+"""
