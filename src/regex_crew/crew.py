@@ -1,9 +1,17 @@
 from typing import List
 
-from crewai import Agent, Crew, Process, Task
+from crewai import LLM, Agent, Task
 from pydantic import BaseModel, Field
 
 from regex_crew.tools.execute_e2b import TestCasesOutput, execute_e2b
+
+gemini_flash = LLM(
+    model="gemini/gemini-2.0-flash",
+)
+
+gemini_pro = LLM(
+    model="gemini/gemini-2.0-pro-exp-02-05",
+)
 
 
 class RegexOutput(BaseModel):
@@ -34,9 +42,6 @@ class FinalEvaluationOutput(BaseModel):
     )
 
 
-# Define the regex problem (this can be customized)
-regex_problem = "Match valid email addresses and reject invalid ones."
-
 # Agent 1: Challenger
 challenger = Agent(
     role="Regex Challenger",
@@ -45,6 +50,7 @@ challenger = Agent(
         "You are a master of edge-case detection in regex. You translate user problems into tests suites and relentlessly push implementers to make their regex bulletproof through waves of validation. Your test cases are legendary for covering scenarios that others miss."
     ),
     verbose=True,
+    llm=gemini_pro,
 )
 
 # Agent 2: Regex Implementer
@@ -57,6 +63,7 @@ implementer = Agent(
         "Your patterns are elegant, efficient, and robust against edge cases."
     ),
     verbose=True,
+    llm=gemini_flash,
 )
 
 # === TASKS ===
@@ -64,7 +71,7 @@ implementer = Agent(
 # Round 1: Generate initial test suite
 generate_test_suite_round1 = Task(
     description=(
-        f"""Based on this user problem: '{regex_problem}', generate a test cases.
+        """Based on this user problem: '{regex_problem}', generate test cases.
 
         Create comprehensive test cases covering common patterns, edge cases, and tricky scenarios.
         The goal is to challenge the implementer but still create a fair and solvable problem.
@@ -78,7 +85,7 @@ generate_test_suite_round1 = Task(
 
 implement_regex_round1 = Task(
     description=(
-        f"""Create the best possible regex pattern for this problem: '{regex_problem}'
+        """Create the best possible regex pattern for this problem: '{regex_problem}'
 
         IMPORTANT: Return ONLY the regex pattern string itself, nothing else. No code, no explanation.
         """

@@ -1,20 +1,19 @@
 #!/usr/bin/env python
-import sys
-import warnings
 import os
-from crewai import Crew
+import warnings
 
+from crewai import Crew
 
 from regex_crew.crew import (
     challenger,
-    implementer,
-    generate_test_suite_round1,
-    implement_regex_round1,
     evaluate_and_challenge_round1,
-    implement_regex_round2,
     evaluate_and_challenge_round2,
-    implement_regex_final,
     final_evaluation,
+    generate_test_suite_round1,
+    implement_regex_final,
+    implement_regex_round1,
+    implement_regex_round2,
+    implementer,
 )
 
 warnings.filterwarnings("ignore", category=SyntaxWarning, module="pysbd")
@@ -30,12 +29,12 @@ def run():
     Run the crew.
     """
     # Remove the output log file if it exists
-    log_file = 'regex_crew.json'
+    log_file = "regex_crew.json"
     if os.path.exists(log_file):
         os.remove(log_file)
-        
+
     inputs = {"regex_problem": "Match valid email addresses and reject invalid ones."}
-    
+
     print("Starting crew...")
 
     try:
@@ -57,7 +56,7 @@ def run():
                 f"Task {task_output} output: {task_output}"
             ),
             verbose=True,
-            output_log_file=log_file
+            output_log_file=log_file,
         )
         result = code_execution_crew.kickoff(inputs)
         print(result)
